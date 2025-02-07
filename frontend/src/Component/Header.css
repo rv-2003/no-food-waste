@@ -1,0 +1,25 @@
+/* Style the header container */
+.header {
+  display: flex;
+  justify-content: space-between; /* Space between logo and buttons */
+  align-items: center;
+  padding: 10px 20px;
+  background-color: #3482db; /* Change as needed */
+  color: white;
+  border-radius: 1rem;
+}
+
+/* Style the logo */
+.logo {
+  font-size: 24px;
+  font-weight: bold;
+  text-align:center;
+  justify-content: center;
+}
+
+/* Align buttons to the right */
+.buttons {
+  display: flex;
+  gap: 10px; /* Adds spacing between buttons */
+  margin: 0px;
+}
