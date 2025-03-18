@@ -1,64 +1,121 @@
-import React, { useState } from 'react';
-import { Card, CardContent, TextField, Button, Typography, Box, MenuItem } from '@mui/material';
+import { useState } from "react";
+import { useNavigate } from "react-router-dom";
+import {
+  Container,
+  TextField,
+  Button,
+  Card,
+  CardContent,
+  Typography,
+  MenuItem,
+  Select,
+  InputLabel,
+  FormControl,
+} from "@mui/material";
+import axios from "axios";
 
-const SignUpCard = () => {
-  const [userType, setUserType] = useState('');
+export default function Signup() {
+  const [formData, setFormData] = useState({
+    fullname: "",
+    email: "",
+    password: "",
+    role: "",
+  });
+
+  const navigate = useNavigate();
+
+  // Handle Input Change
+  const handleChange = (e) => {
+    const { name, value } = e.target;
+    console.log(`Updating ${name} with value:`, value); // Debugging log
+    setFormData((prevData) => ({
+      ...prevData,
+      [name]: value,
+    }));
+  };
+
+  // Handle Form Submission
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    console.log("Submitting form data:", formData); // Debugging log
+
+    // Check if any field is empty
+    if (!formData.fullname || !formData.email || !formData.password || !formData.role) {
+      alert("All fields are required!");
+      return;
+    }
+
+    try {
+      const response = await axios.post("http://localhost:5000/api/auth/register", formData);
+      alert(response.data.message);
+      navigate("/login"); // Redirect to login page after successful signup
+    } catch (error) {
+      alert("Signup failed. Try again.");
+      console.error("Error:", error.response ? error.response.data : error);
+    }
+  };
 
   return (
-    <Box display="flex" justifyContent="center" alignItems="center" minHeight="100vh">
-      <Card sx={{ width: 400, padding: 3, boxShadow: 3 }}>
+    <Container maxWidth="sm">
+      <Card style={{ backgroundColor: "#fff", padding: "20px", marginTop: "20px" }}>
         <CardContent>
-          <Typography variant="h5" gutterBottom align="center">
-            Sign Up
-          </Typography>
+          <Typography variant="h5">Signup</Typography>
+
+          {/* Full Name Input */}
           <TextField
             label="Full Name"
-            variant="outlined"
+            name="fullname"
             fullWidth
             margin="normal"
+            value={formData.fullname}
+            onChange={handleChange}
           />
+
+          {/* Email Input */}
           <TextField
             label="Email"
-            variant="outlined"
+            name="email"
+            type="email"
             fullWidth
             margin="normal"
+            value={formData.email}
+            onChange={handleChange}
           />
-          <TextField
-            label="Select User Type"
-            select
-            fullWidth
-            variant="outlined"
-            margin="normal"
-            value={userType}
-            onChange={(e) => setUserType(e.target.value)}
-          >
-            <MenuItem value="Restaurant">Restaurant</MenuItem>
-            <MenuItem value="NGO">NGO</MenuItem>
-            <MenuItem value="Caterer">Caterer</MenuItem>
-            <MenuItem value="Event Management Company">Event Management Company</MenuItem>
-          </TextField>
+
+          {/* Password Input */}
           <TextField
             label="Password"
+            name="password"
             type="password"
-            variant="outlined"
             fullWidth
             margin="normal"
+            value={formData.password}
+            onChange={handleChange}
           />
-          <Button
-            variant="contained"
-            color="primary"
-            fullWidth
-            sx={{ mt: 2 }}
-          >
-            Sign Up
+
+          {/* Role Dropdown */}
+          <FormControl fullWidth margin="normal">
+            <InputLabel>Role</InputLabel>
+            <Select
+              name="role"
+              value={formData.role}
+              onChange={(e) => handleChange({ target: { name: "role", value: e.target.value } })}
+            >
+              <MenuItem value="restaurant">Restaurant</MenuItem>
+              <MenuItem value="ngo">NGO</MenuItem>
+              <MenuItem value="caterer">Caterer</MenuItem>
+              <MenuItem value="charity">Charity</MenuItem>
+            </Select>
+          </FormControl>
+
+          {/* Signup Button */}
+          <Button variant="contained" color="primary" fullWidth onClick={handleSubmit}>
+            Signup
           </Button>
-          <Typography variant="body2" align="center" sx={{ mt: 2 }}>
-            Already have an account? <a href="/login">Login</a>
-          </Typography>
         </CardContent>
       </Card>
-    </Box>
+    </Container>
   );
-};
+}
 
-export default SignUpCard;
+

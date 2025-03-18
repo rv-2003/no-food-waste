@@ -1,44 +1,110 @@
-import React from 'react';
-import { Card, CardContent, TextField, Button, Typography, Box, Link } from '@mui/material';
+import React, { useState } from "react";
+import { useNavigate } from "react-router-dom";
+import {
+  Card,
+  CardContent,
+  TextField,
+  Button,
+  Typography,
+  Box,
+  Link,
+  Alert,
+  CircularProgress,
+} from "@mui/material";
+import axios from "axios";
 
 const LoginCard = () => {
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState("");
+  const navigate = useNavigate();
+
+  const handleLogin = async () => {
+    setLoading(true);
+    setError("");
+
+    try {
+      const response = await axios.post("http://localhost:5000/api/auth/login", {
+        email,
+        password
+      });
+
+      localStorage.setItem("token", response.data.token);
+      alert("Login successful!");
+      navigate("/profile"); // Redirect to profile page
+    } catch (err) {
+      setError(err.response?.data?.message || "Login failed. Try again.");
+    } finally {
+      setLoading(false);
+    }
+  };
+
   return (
-    <Box display="flex" justifyContent="center" alignItems="center" minHeight="100vh">
-      <Card sx={{ width: 350, padding: 3, boxShadow: 3 }}>
+    <Box
+      sx={{
+        display: "flex",
+        justifyContent: "center",
+        alignItems: "center",
+        height: "100vh",
+        backgroundColor: "#f4f4f4",
+      }}
+    >
+      <Card sx={{ width: 350, p: 3, boxShadow: 3 }}>
         <CardContent>
-          <Typography variant="h5" gutterBottom align="center">
+          <Typography variant="h5" align="center" gutterBottom>
             Login
           </Typography>
+
+          {error && <Alert severity="error">{error}</Alert>}
+
           <TextField
+            fullWidth
             label="Email"
             variant="outlined"
-            fullWidth
             margin="normal"
+            value={email}
+            onChange={(e) => setEmail(e.target.value)}
           />
           <TextField
+            fullWidth
             label="Password"
             type="password"
             variant="outlined"
-            fullWidth
             margin="normal"
+            value={password}
+            onChange={(e) => setPassword(e.target.value)}
           />
+
           <Button
+            fullWidth
             variant="contained"
             color="primary"
-            fullWidth
             sx={{ mt: 2 }}
+            onClick={handleLogin}
+            disabled={loading}
           >
-            Login
+            {loading ? <CircularProgress size={24} color="inherit" /> : "Login"}
           </Button>
+
           <Typography variant="body2" align="center" sx={{ mt: 2 }}>
-            Don't have an account?{' '}
-            <a href="/signup"> Sign up</a>  
+            Don't have an account?{" "}
+            <Link href="/signup" underline="hover">
+              Sign up
+            </Link>
           </Typography>
         </CardContent>
       </Card>
     </Box>
   );
 };
+
 export default LoginCard;
+
+
+
+
+
+
 
 
