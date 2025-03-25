@@ -1,314 +1,68 @@
 import React, { useState, useEffect } from "react";
-import {
-  Container,
-  Grid,
-  Card,
-  CardContent,
-  Typography,
-  Button,
-  Chip,
-  Box,
-  Dialog,
-  DialogTitle,
-  DialogContent,
-  DialogActions,
-  TextField,
-  MenuItem,
-  Select,
-  FormControl,
-  InputLabel,
-  CircularProgress
-} from "@mui/material";
-import { RestaurantMenu, LocationOn, AccessTime, Store } from "@mui/icons-material";
-import axios from "axios";
+import DonorDashboardHeader from "../Component/donorheader";
+import DonationForm from "../Component/DonationForm";
+import DonationHistory from "../Component/DonationHistory";
+import Map from "../Component/MapComponent";
+import { Container, Typography, Alert } from "@mui/material";
 
 const Dashboard = () => {
-  const [donations, setDonations] = useState([]);
-  const [loading, setLoading] = useState(true);
-  const [userRole, setUserRole] = useState("");
-  const [openDialog, setOpenDialog] = useState(false);
-  const [newDonation, setNewDonation] = useState({
-    foodType: "",
-    quantity: "",
-    expiryTime: "",
-    pickupLocation: "",
-    description: ""
-  });
+  const [pickupLocation, setPickupLocation] = useState(null);
+  const [locationError, setLocationError] = useState(null);
+  const username = "JohnDoe"; // Replace this with actual username from state/context
 
   useEffect(() => {
-    // Get user info and available donations
-    const fetchData = async () => {
-      try {
-        const token = localStorage.getItem("token");
-        if (!token) {
-          window.location.href = "/login";
-          return;
-        }
+    if (navigator.geolocation) {
+      navigator.geolocation.getCurrentPosition(
+        (position) => {
+          const newLocation = {
+            lat: position.coords.latitude,
+            lng: position.coords.longitude,
+          };
 
-        // Get user profile to determine role
-        const userResponse = await axios.get("http://localhost:5000/api/user/profile", {
-          headers: { Authorization: `Bearer ${token}` }
-        });
-        
-        setUserRole(userResponse.data.role);
+          // Prevent unnecessary updates
+          setPickupLocation((prevLocation) =>
+            prevLocation?.lat !== newLocation.lat || prevLocation?.lng !== newLocation.lng
+              ? newLocation
+              : prevLocation
+          );
 
-        // Get all donations
-        const donationsResponse = await axios.get("http://localhost:5000/api/donations", {
-          headers: { Authorization: `Bearer ${token}` }
-        });
-        
-        setDonations(donationsResponse.data);
-        setLoading(false);
-      } catch (error) {
-        console.error("Error fetching data:", error);
-        setLoading(false);
-      }
-    };
-
-    fetchData();
+          setLocationError(null);
+        },
+        (error) => {
+          console.error("Error getting location:", error);
+          setLocationError("Failed to get location. Please enable GPS.");
+        },
+        { enableHighAccuracy: true, timeout: 10000, maximumAge: 0 }
+      );
+    } else {
+      setLocationError("Geolocation is not supported by this browser.");
+    }
   }, []);
 
-  const handleCreateDonation = async () => {
-    try {
-      const token = localStorage.getItem("token");
-      await axios.post(
-        "http://localhost:5000/api/donations",
-        newDonation,
-        { headers: { Authorization: `Bearer ${token}` } }
-      );
-
-      // Refresh donations list
-      const donationsResponse = await axios.get("http://localhost:5000/api/donations", {
-        headers: { Authorization: `Bearer ${token}` }
-      });
-      
-      setDonations(donationsResponse.data);
-      setOpenDialog(false);
-      setNewDonation({
-        foodType: "",
-        quantity: "",
-        expiryTime: "",
-        pickupLocation: "",
-        description: ""
-      });
-    } catch (error) {
-      console.error("Error creating donation:", error);
-      alert("Failed to create donation");
-    }
-  };
-
-  const handleClaimDonation = async (donationId) => {
-    try {
-      const token = localStorage.getItem("token");
-      await axios.post(
-        `http://localhost:5000/api/donations/${donationId}/claim`,
-        {},
-        { headers: { Authorization: `Bearer ${token}` } }
-      );
-
-      // Refresh donations list
-      const donationsResponse = await axios.get("http://localhost:5000/api/donations", {
-        headers: { Authorization: `Bearer ${token}` }
-      });
-      
-      setDonations(donationsResponse.data);
-      alert("Donation claimed successfully!");
-    } catch (error) {
-      console.error("Error claiming donation:", error);
-      alert("Failed to claim donation");
-    }
-  };
-
-  const handleInputChange = (e) => {
-    setNewDonation({
-      ...newDonation,
-      [e.target.name]: e.target.value
-    });
-  };
-
-  const getStatusColor = (status) => {
-    switch (status) {
-      case "available": return "success";
-      case "claimed": return "primary";
-      case "completed": return "secondary";
-      case "expired": return "error";
-      default: return "default";
-    }
-  };
-
-  if (loading) {
-    return (
-      <Box sx={{ display: "flex", justifyContent: "center", alignItems: "center", height: "100vh" }}>
-        <CircularProgress />
-      </Box>
-    );
-  }
-
   return (
-    <Container maxWidth="lg" sx={{ mt: 4, mb: 4 }}>
-      <Box sx={{ display: "flex", justifyContent: "space-between", mb: 3 }}>
-        <Typography variant="h4">Food Donation Dashboard</Typography>
-        {(userRole === "restaurant" || userRole === "caterer" || userRole === "event") && (
-          <Button 
-            variant="contained" 
-            color="primary" 
-            onClick={() => setOpenDialog(true)}
-          >
-            Add New Donation
-          </Button>
-        )}
-      </Box>
+    <>
+      {/* Donor Dashboard Header */}
+      <DonorDashboardHeader username={username} />
 
-      <Grid container spacing={3}>
-        {donations.map((donation) => (
-          <Grid item xs={12} md={6} lg={4} key={donation._id}>
-            <Card 
-              sx={{ 
-                height: "100%", 
-                display: "flex", 
-                flexDirection: "column",
-                boxShadow: 3,
-                transition: "transform 0.3s ease",
-                "&:hover": {
-                  transform: "translateY(-5px)"
-                }
-              }}
-            >
-              <CardContent sx={{ flexGrow: 1 }}>
-                <Box sx={{ display: "flex", justifyContent: "space-between", alignItems: "center", mb: 2 }}>
-                  <Typography variant="h6" component="div">
-                    {donation.foodType}
-                  </Typography>
-                  <Chip 
-                    label={donation.status} 
-                    color={getStatusColor(donation.status)} 
-                    size="small" 
-                  />
-                </Box>
+      <Container>
+        <Typography variant="h4" gutterBottom sx={{ mt: 4 }}>
+          Donor Dashboard
+        </Typography>
 
-                <Typography color="text.secondary" gutterBottom>
-                  <Store sx={{ fontSize: 16, mr: 1, verticalAlign: "text-bottom" }} />
-                  {donation.donorName}
-                </Typography>
-                
-                <Typography sx={{ mb: 1 }}>
-                  <LocationOn sx={{ fontSize: 16, mr: 1, verticalAlign: "text-bottom" }} />
-                  {donation.pickupLocation}
-                </Typography>
-                
-                <Typography sx={{ mb: 1 }}>
-                  <RestaurantMenu sx={{ fontSize: 16, mr: 1, verticalAlign: "text-bottom" }} />
-                  Quantity: {donation.quantity}
-                </Typography>
-                
-                <Typography sx={{ mb: 2 }}>
-                  <AccessTime sx={{ fontSize: 16, mr: 1, verticalAlign: "text-bottom" }} />
-                  Pick up before: {new Date(donation.expiryTime).toLocaleString()}
-                </Typography>
-                
-                <Typography variant="body2" color="text.secondary">
-                  {donation.description}
-                </Typography>
-              </CardContent>
+        {/* Show Error Message if Location Fails */}
+        {locationError && <Alert severity="error">{locationError}</Alert>}
 
-              {userRole === "ngo" && donation.status === "available" && (
-                <Box sx={{ p: 2 }}>
-                  <Button 
-                    variant="contained" 
-                    color="primary" 
-                    fullWidth
-                    onClick={() => handleClaimDonation(donation._id)}
-                  >
-                    Claim This Donation
-                  </Button>
-                </Box>
-              )}
-            </Card>
-          </Grid>
-        ))}
+        {/* Pass location to Map */}
+        <Map pickupLocation={pickupLocation} setPickupLocation={setPickupLocation} />
 
-        {donations.length === 0 && (
-          <Grid item xs={12}>
-            <Box sx={{ textAlign: "center", p: 4 }}>
-              <Typography variant="h6" color="text.secondary">
-                No donations available at the moment
-              </Typography>
-              {(userRole === "restaurant" || userRole === "caterer" || userRole === "event") && (
-                <Button 
-                  variant="contained" 
-                  color="primary" 
-                  sx={{ mt: 2 }}
-                  onClick={() => setOpenDialog(true)}
-                >
-                  Create Your First Donation
-                </Button>
-              )}
-            </Box>
-          </Grid>
-        )}
-      </Grid>
+        {/* Show Donation Form only if location is available */}
+        {pickupLocation && <DonationForm location={pickupLocation} />}
 
-      {/* Dialog for creating new donations */}
-      <Dialog open={openDialog} onClose={() => setOpenDialog(false)} maxWidth="sm" fullWidth>
-        <DialogTitle>Create New Food Donation</DialogTitle>
-        <DialogContent>
-          <TextField
-            name="foodType"
-            label="Food Type"
-            fullWidth
-            margin="normal"
-            value={newDonation.foodType}
-            onChange={handleInputChange}
-            placeholder="e.g., Cooked meals, Sandwiches, Desserts"
-          />
-          <TextField
-            name="quantity"
-            label="Quantity"
-            fullWidth
-            margin="normal"
-            value={newDonation.quantity}
-            onChange={handleInputChange}
-            placeholder="e.g., 20 meals, 5kg of rice, 10 boxes"
-          />
-          <TextField
-            name="expiryTime"
-            label="Available Until"
-            type="datetime-local"
-            fullWidth
-            margin="normal"
-            InputLabelProps={{ shrink: true }}
-            value={newDonation.expiryTime}
-            onChange={handleInputChange}
-          />
-          <TextField
-            name="pickupLocation"
-            label="Pickup Location"
-            fullWidth
-            margin="normal"
-            value={newDonation.pickupLocation}
-            onChange={handleInputChange}
-          />
-          <TextField
-            name="description"
-            label="Description"
-            fullWidth
-            margin="normal"
-            multiline
-            rows={4}
-            value={newDonation.description}
-            onChange={handleInputChange}
-            placeholder="Any specific details about the food, packaging, dietary information, etc."
-          />
-        </DialogContent>
-        <DialogActions>
-          <Button onClick={() => setOpenDialog(false)}>Cancel</Button>
-          <Button onClick={handleCreateDonation} variant="contained" color="primary">
-            Create Donation
-          </Button>
-        </DialogActions>
-      </Dialog>
-    </Container>
+        <DonationHistory />
+      </Container>
+    </>
   );
 };
 
 export default Dashboard;
+
