@@ -2,7 +2,7 @@ import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { login } from "../services/authServices";
 import { handleError } from "../utils/errorHandler";
-import api from "../utils/api"; // ✅ Ensure this import is present
+import api from "../utils/api";
 
 import {
   Card,
@@ -22,45 +22,52 @@ const LoginCard = () => {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
   const navigate = useNavigate();
+
   const handleLogin = async () => {
-    console.log("🔹 Login button clicked"); // Step 1: Button clicked
     setLoading(true);
     setError("");
   
     try {
-      console.log("🔹 Sending request to backend..."); // Step 2: Before API request
-      const response = await api.post("/auth/login", { email, password });
+      const response = await login(email, password);
+      const { token, user } = response;
   
-      console.log("✅ Server Response:", response.data); // Step 3: After receiving response
-  
-      const { token } = response.data;
-      if (!token) {
-        console.error("❌ No token received from server");
-        throw new Error("No token received from server");
+      if (!token || !user) {
+        throw new Error("No token or user data received");
       }
   
-      const expiresIn = 3600 * 1000; // 1 hour (or whatever your backend sets)
-      const expiresAt = Date.now() + expiresIn;
+      // 🆕 Decode the token to extract the expiration time
+      const decodedToken = JSON.parse(atob(token.split('.')[1]));
+      const expiresAt = decodedToken.exp * 1000; // convert to ms
   
-      // 🔹 Store token and expiration in localStorage instead of sessionStorage
+      // 📝 Store everything
       localStorage.setItem("token", token);
-      localStorage.setItem("expiresAt", expiresAt.toString()); // ✅ Store expiresAt
+      localStorage.setItem("user", JSON.stringify(user));
+      localStorage.setItem("expiresAt", expiresAt); // ← Add this line
   
-      console.log("✅ Token stored in localStorage:", token);
-      console.log("✅ ExpiresAt stored in localStorage:", expiresAt); // Debugging
-  
-      console.log("🔹 Navigating to dashboard...");
-      navigate("/dashboard"); // Step 4: Navigation attempt
+      // Navigate by role
+      switch(user.role) {
+        case 'ngo':
+          navigate("/ngo-dashboard");
+          break;
+        case 'restaurant':
+        case 'caterer':
+        case 'event_planner':
+          navigate("/dashboard");
+          break;
+        default:
+          navigate("/");
+          console.warn("Unknown user role:", user.role);
+      }
   
     } catch (err) {
-      console.error("❌ Login Error:", err.response || err);
-      setError(err.response?.data?.msg || "Login failed. Try again.");
+      const errorMessage = handleError(err);
+      setError(errorMessage);
     } finally {
-      console.log("🔹 Finished login process");
       setLoading(false);
     }
-  };
   
+  };
+
   return (
     <Box
       sx={{
@@ -87,7 +94,9 @@ const LoginCard = () => {
             value={email}
             onChange={(e) => setEmail(e.target.value)}
             autoComplete="email"
+            required
           />
+
           <TextField
             fullWidth
             label="Password"
@@ -97,6 +106,7 @@ const LoginCard = () => {
             value={password}
             onChange={(e) => setPassword(e.target.value)}
             autoComplete="current-password"
+            required
           />
 
           <Button
@@ -105,7 +115,7 @@ const LoginCard = () => {
             color="primary"
             sx={{ mt: 2, py: 1 }}
             onClick={handleLogin}
-            disabled={loading}
+            disabled={loading || !email || !password}
           >
             {loading ? <CircularProgress size={24} color="inherit" /> : "Login"}
           </Button>
@@ -123,11 +133,3 @@ const LoginCard = () => {
 };
 
 export default LoginCard;
-
-
-
-
-
-
-
-

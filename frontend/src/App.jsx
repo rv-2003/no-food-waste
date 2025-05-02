@@ -6,11 +6,13 @@ import Signup from "./Pages/Signup";
 import AboutUs from "./Pages/AboutUs";
 import Donate from "./Pages/Donate";
 import Dashboard from "./Pages/dashboard"; 
-import UserProfile from "./Pages/Profile";
+import UserProfile from "./Pages/profile";
 import ProtectedRoute from "./Component/ProtectedRoute"; // ✅ Import Protected Route
+import NgoDashboard from "./Pages/Ngodashboard";
+
 
 function App() {
-  useEffect(() => {
+  useEffect(() => { 
     const handleTabClose = () => {
       sessionStorage.removeItem("token"); // ✅ Remove token on tab close
     };
@@ -32,6 +34,8 @@ function App() {
 
         <Route path="/dashboard" element={<ProtectedRoute element={<Dashboard />} />} />
         <Route path="/profile" element={<ProtectedRoute element={<UserProfile />} />} />
+        <Route path="/ngo-dashboard" element={<ProtectedRoute element={<NgoDashboard />} />} />
+
 
       </Routes>
     </Router>

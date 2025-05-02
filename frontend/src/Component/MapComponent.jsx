@@ -51,7 +51,7 @@ const Map = ({ pickupLocation, setPickupLocation }) => {
       mapId: "7b14a3815605d75",
     });
 
-    //Ensure the marker library is loaded before accessing AdvancedMarkerElement
+    
     if (window.google.maps.marker && window.google.maps.marker.AdvancedMarkerElement) {
       if (markerRef.current) {
         markerRef.current.setMap(null);//Remove previous marker

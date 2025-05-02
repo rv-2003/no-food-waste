@@ -31,7 +31,7 @@ console.log("DB_PORT:", process.env.DB_PORT);
 // ✅ Correctly export both sequelize and pool
 module.exports = { sequelize, pool };
 
-
+ 
 
 
 

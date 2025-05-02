@@ -274,7 +274,7 @@ const Signup = () => {
               <MenuItem value="restaurant">Restaurant</MenuItem>
               <MenuItem value="ngo">NGO</MenuItem>
               <MenuItem value="caterer">Caterer</MenuItem>
-              <MenuItem value="Event Planner">Event Planner</MenuItem>
+              <MenuItem value="event_planner">Event Planner</MenuItem>
             </Select>
           </FormControl>
 

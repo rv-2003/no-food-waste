@@ -1,40 +1,43 @@
 const jwt = require("jsonwebtoken");
 
-// ✅ Use Set to store blacklisted tokens
+// ✅ Store blacklisted tokens
 const blacklistedTokens = new Set();
 
 const verifyToken = (req, res, next) => {
-  const token = req.headers.authorization?.split(" ")[1];
+    const authHeader = req.headers.authorization;
+    
 
-  if (!token) {
-    return res.status(401).json({ msg: "Unauthorized" });
-  }
+    if (!authHeader || !authHeader.startsWith("Bearer ")) {
+        console.log("❌ No token provided"); // Debugging
+        return res.status(401).json({ msg: "Unauthorized: No token provided" });
+    }
 
-  // ✅ Check if token is blacklisted
-  if (blacklistedTokens.has(token)) {
-    return res.status(403).json({ msg: "Session expired. Please log in again." });
-  }
+    const token = authHeader.split(" ")[1];
 
-  try {
-    const decoded = jwt.verify(token, process.env.JWT_SECRET);
-    req.user = decoded; // This should contain `id` as a UUID
-    console.log("✅ Decoded User:", req.user); // Debugging
-    next();
-  } catch (error) {
-    console.error("❌ Token Verification Error:", error.message);
-    res.status(403).json({ msg: "Invalid token" });
-  }
+    // ✅ Check if token is blacklisted
+    if (blacklistedTokens.has(token)) {
+        console.log("❌ Token is blacklisted"); // Debugging
+        return res.status(403).json({ msg: "Session expired. Please log in again." });
+    }
+
+    try {
+        const decoded = jwt.verify(token, process.env.JWT_SECRET);
+        req.user = decoded; // ✅ Store decoded user
+        console.log("✅ Decoded User:", decoded); // Debugging
+        next();
+    } catch (error) {
+        console.error("❌ Token Verification Error:", error.message);
+
+        if (error.name === "TokenExpiredError") {
+            blacklistedTokens.add(token);
+            return res.status(403).json({ msg: "Session expired. Please log in again." });
+        }
+
+        return res.status(403).json({ msg: "Invalid token" });
+    }
 };
 
-// ✅ Role-Based Access Middleware
-const checkRole = (role) => (req, res, next) => {
-  if (!req.user || req.user.role !== role) {
-    return res.status(403).json({ msg: "Access denied" });
-  }
-  next();
-};
+module.exports = { verifyToken, blacklistedTokens };
 
-// ✅ Consistent Exports
-module.exports = { verifyToken, blacklistedTokens, checkRole };
 
 

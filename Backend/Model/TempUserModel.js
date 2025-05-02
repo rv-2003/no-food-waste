@@ -1,4 +1,3 @@
-// TempUserModel.js
 const { Sequelize, DataTypes } = require("sequelize");
 const { sequelize } = require("../Config/db");
 
@@ -20,6 +19,18 @@ const TempUsers = sequelize.define("TempUsers", {
       isEmail: true,
     },
   },
+  phone: {
+    type: DataTypes.STRING(20),
+    allowNull: true, // Optional field
+  },
+  address: {
+    type: DataTypes.STRING(500),
+    allowNull: true, // Optional field
+  },
+  profilePic: {
+    type: DataTypes.STRING,
+    allowNull: true, // URL for profile picture
+  },
   password: {
     type: DataTypes.STRING,
     allowNull: false,
@@ -27,6 +38,9 @@ const TempUsers = sequelize.define("TempUsers", {
   role: {
     type: DataTypes.STRING,
     allowNull: false,
+    validate: {
+      isIn: [["restaurant", "caterer", "event_planner", "ngo"]],
+    },
   },
   token: {
     type: DataTypes.STRING,
@@ -39,8 +53,8 @@ const TempUsers = sequelize.define("TempUsers", {
     field: "created_at",
   },
 }, {
-  timestamps: false, // Disable Sequelize's automatic timestamps
-  tableName: "TempUsers", // Explicitly set the table name
+  timestamps: false,
+  tableName: "TempUsers",
 });
 
 module.exports = TempUsers;

@@ -1,6 +1,6 @@
 const { Sequelize, DataTypes } = require("sequelize");
-const { sequelize } = require("../Config/db");
-
+const { sequelize } = require ("../Config/db.js");
+const Users=require("./UserModel");
 const Donations = sequelize.define("Donations", {
   id: {
     type: DataTypes.UUID,
@@ -29,7 +29,19 @@ const Donations = sequelize.define("Donations", {
   },
   status: {
     type: DataTypes.STRING,
-    defaultValue: "Pending",
+    defaultValue: "Pending", // Default status for donations
+  },
+  ngo_status: {
+    type: DataTypes.STRING,
+    defaultValue: "pending",  // Default status for NGO (Pending, Accepted, etc.)
+  },
+  donor_status: {
+    type: DataTypes.STRING,
+    defaultValue: "pending", // Default status for donor (Pending, Delivered, etc.)
+  },
+  acceptedBy: {
+    type: DataTypes.UUID,
+    allowNull: true,
   },
   createdAt: {
     type: DataTypes.DATE,
@@ -41,4 +53,5 @@ const Donations = sequelize.define("Donations", {
   },
 });
 
-module.exports = Donations;
+
+module.exports = Donations; 
